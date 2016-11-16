@@ -9,12 +9,14 @@ def sanitize(msg):
 	for char in msg:
 		if char in '?.!/;:,()[]{}#$%^&*@!"':
 			msg = msg.replace(char,'')
+	print msg
 	return msg
 
 def is_ascii(string):
 	try:
 		string.decode('ascii')
-	except UnicodeDecodeError:
+	except UnicodeDecodeError as ude:
+		print ude
 		return False
 	else:
 		return True
@@ -24,6 +26,7 @@ def collect(data, main, user):
 		try:
 			main[word] += 1
 		except KeyError as ke:
+			print ke
 			if word not in user:
 				user[word] = 1
 			else:
@@ -41,7 +44,7 @@ def cleanup(main, user):
 	with open("out/" + str(now).split()[1] + ".txt", 'w') as out:
 		for word, count in main.items():
 			out.write("%s, %s\n" % (word, count))
-		for wn in user.items():
+		for word, count in user.items():
 			out.write("%s, %s\n" % (word, count))
 	out.close()
 
