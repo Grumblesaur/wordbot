@@ -1,6 +1,11 @@
+#!/usr/bin/python
+
 import socket
 import sys
 import datetime
+import signal
+
+words = {}; user_words = {}
 
 def ping(msg, conn):
 	if msg.find("PING") > -1:
@@ -33,6 +38,22 @@ def collect(data, main, user):
 			else:
 				user[word] += 1
 
+def cleanup(main, user):
+	now = datetime.datetime.now()
+	with open("out/" + str(now).split()[1] + ".txt", 'w') as out:
+		for word, count in main.items():
+			out.write("%s, %s\n" % (word, count))
+		for wn in user.items():
+			out.write("%s, %s\n" % (word, count))
+	out.close()
+
+def handle(signum, frame):
+	print("Process killed.")
+	cleanup(words, user_words)
+	sys.exit(0)
+
+signal.signal(signal.SIGTERM, handle)
+
 # constants
 nick = "wordbot"
 serv = "irc.gamesurge.net"
@@ -45,11 +66,10 @@ log = sys.stdout.write
 ## procedure start ##
 
 # populate dictionary with words to track
-words = {}; user_words = {}
 with open("/usr/share/dict/american-english") as amer_engl:
 	for line in amer_engl:
 		if (is_ascii(line)):
-			words[line.lower()] = 0
+			words[line.lower().strip()] = 0
 
 # connect to IRC server
 irc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -60,8 +80,7 @@ irc.send("USER " + nick + " " + nick + " " + nick + ":Grumblesaur IRC\r\n")
 irc.send("JOIN " + chan + "\r\n")
 
 connected = False
-scanning = True
-ignore = True
+scanning = ignore = True
 while scanning:
 	try:
 		# ping when requested
@@ -84,7 +103,7 @@ while scanning:
 			continue
 		
 		# collect word usage data
-		data = sanitize(data)
+		data = sanitize(data.strip())
 		print data
 		data = data.split()[3:]
 		collect(data, words, user_words)
@@ -92,11 +111,5 @@ while scanning:
 	except KeyboardInterrupt as e:
 		scanning = False
 
-now = datetime.datetime.now()
-
-with open("out/" + str(now) + ".txt", 'w') as out:
-	for word, count in words.items():
-		out.write("%s, %s\n" % (word, count))
-	for wn in user_words.items():
-		out.write("%s, %s\n" % (word, count))
+cleanup(words, user_words)
 
