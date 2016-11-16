@@ -4,53 +4,10 @@ import socket
 import sys
 import datetime
 import signal
+from bot_help import *
 
 words = {}; user_words = {}
 
-def ping(msg, conn):
-	if msg.find("PING") > -1:
-		conn.send("PONG %s\r\n" % data.split()[1])
-		return "PING"
-	return ""
-
-def sanitize(msg):
-	msg = msg.lower()
-	for char in msg:
-		if char in '?.!/;:,()[]{}#$%^&*@!"':
-			msg = msg.replace(char,'')
-	return msg
-
-def is_ascii(string):
-	try:
-		string.decode('ascii')
-	except UnicodeDecodeError:
-		return False
-	else:
-		return True
-
-def collect(data, main, user):
-	for word in data:
-		try:
-			main[word] += 1
-		except KeyError as ke:
-			if word not in user:
-				user[word] = 1
-			else:
-				user[word] += 1
-
-def cleanup(main, user):
-	now = datetime.datetime.now()
-	with open("out/" + str(now).split()[1] + ".txt", 'w') as out:
-		for word, count in main.items():
-			out.write("%s, %s\n" % (word, count))
-		for wn in user.items():
-			out.write("%s, %s\n" % (word, count))
-	out.close()
-
-def handle(signum, frame):
-	print("Process killed.")
-	cleanup(words, user_words)
-	sys.exit(0)
 
 signal.signal(signal.SIGTERM, handle)
 
@@ -68,18 +25,19 @@ log = sys.stdout.write
 # populate dictionary with words to track
 with open("/usr/share/dict/words") as amer_engl:
 	for line in amer_engl:
-		if (is_ascii(line)):
+		if is_ascii(line):
 			words[line.lower().strip()] = 0
 
 # connect to IRC server
 irc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 irc.connect((serv, port))
 irc.recv(4096)
-irc.send("NICK " + nick + "\r\n")
-irc.send("USER " + nick + " " + nick + " " + nick + ":Grumblesaur IRC\r\n")
-irc.send("JOIN " + chan + "\r\n")
+irc.send("NICK %s\r\n" % nick)
+irc.send("USER %s %s %s :Grumblesaur IRC\r\n" % (nick, nick, nick))
+irc.send("JOIN %s\r\n" % chan)
+print "connect"
 
-connected = False
+given_voice = False
 scanning = ignore = True
 while scanning:
 	try:
@@ -88,26 +46,17 @@ while scanning:
 		if ping(data, irc):
 			print "ping"
 			continue # don't add pings to the dictionary
-		
-		# ensure that we are in the channel
-		if connected == False:
-			irc.send("JOIN " + chan + "\r\n")
-		if "@" in data and connected == False:
-			connected = True
-			print "connect"
-		
+		# join channel
+		if not given_voice:
+			given_voice = join_channel(data, irc, chan, given_voice)
 		# wait for the IRC boilerplate to finish being sent to wordbot
 		if ignore:
-			if "mode limittheory +v wordbot" in data:
+			if "mode %s +v %s" % (channel[1:],nick) in data:
 				ignore = False
 			continue
-		
 		# collect word usage data
-		data = sanitize(data.strip())
-		print data
-		data = data.split()[3:]
+		data = sanitize(data.strip()).split()[3:]
 		collect(data, words, user_words)
-
 	except KeyboardInterrupt as e:
 		scanning = False
 
