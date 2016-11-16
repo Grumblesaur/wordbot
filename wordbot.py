@@ -66,7 +66,7 @@ log = sys.stdout.write
 ## procedure start ##
 
 # populate dictionary with words to track
-with open("/usr/share/dict/american-english") as amer_engl:
+with open("/usr/share/dict/words") as amer_engl:
 	for line in amer_engl:
 		if (is_ascii(line)):
 			words[line.lower().strip()] = 0
