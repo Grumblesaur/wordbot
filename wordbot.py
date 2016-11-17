@@ -50,7 +50,7 @@ while scanning:
 			given_voice = join_channel(data, irc, chan, given_voice)
 		# wait for the IRC boilerplate to finish being sent to wordbot
 		if ignore:
-			if "mode %s +v %s" % (channel[1:],nick) in data:
+			if "mode %s +v %s" % (chan[1:],nick) in data:
 				ignore = False
 			continue
 		# collect word usage data
