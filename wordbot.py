@@ -8,7 +8,6 @@ from bot_help import *
 
 words = {}; user_words = {}
 
-
 signal.signal(signal.SIGTERM, handle)
 
 # constants

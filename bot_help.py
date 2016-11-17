@@ -33,7 +33,7 @@ def collect(data, main, user):
 				user[word] += 1
 
 def join_channel(msg, conn, chan, flag):
-	irc.send("JOIN %s\r\n" % chan)
+	conn.send("JOIN %s\r\n" % chan)
 	if '@' in msg and not flag:
 		print "join"
 		return True
