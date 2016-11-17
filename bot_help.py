@@ -1,6 +1,6 @@
 def ping(msg, conn):
 	if msg.find("PING") > -1:
-		conn.send("PONG %s\r\n" % data.split()[1])
+		conn.send("PONG %s\r\n" % msg.split()[1])
 		return "PING"
 	return ""
 
