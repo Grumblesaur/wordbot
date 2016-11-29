@@ -1,3 +1,5 @@
+import datetime
+
 def ping(msg, conn):
 	if msg.find("PING") > -1:
 		conn.send("PONG %s\r\n" % msg.split()[1])
@@ -48,8 +50,4 @@ def cleanup(main, user):
 			out.write("%s, %s\n" % (word, count))
 	out.close()
 
-def handle(signum, frame):
-	print("Process killed.")
-	cleanup(words, user_words)
-	sys.exit(0)
 

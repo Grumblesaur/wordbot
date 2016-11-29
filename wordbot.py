@@ -6,7 +6,13 @@ import datetime
 import signal
 from bot_help import *
 
+
 words = {}; user_words = {}
+
+def handle(signum, frame):
+	print("Process killed.")
+	cleanup(words, user_words)
+	sys.exit(0)
 
 signal.signal(signal.SIGTERM, handle)
 
